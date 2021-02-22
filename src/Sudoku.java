@@ -10,6 +10,7 @@ public class Sudoku {
     private int taille = 9;
     private int[][] grille;
     private ArrayList<Variable> v;
+    private ArrayList<Variable> bestVariable;
     private int cpt;
 
     public Sudoku(String name){
@@ -56,12 +57,27 @@ public class Sudoku {
         return false;
     }
 
+    public void chooseVariable(){
+        MRV();
+        for(Variable variable : v){
+            if(v.get(0).domains.size() == variable.domains.size()){
+                bestVariable.add(variable);
+            }
+        }
+        if(v.size() > 1){
+            if(v.get(0).domains.size() == v.get(1).domains.size()){
+                DegreeHeuristic();
+            }
+        }
+
+    }
+
     public void MRV(){
         v.sort(Comparator.comparing(a -> a.domains.size()));
     }
 
     public void DegreeHeuristic(){
-        for(Variable variable : v){
+        for(Variable variable : bestVariable){
             int compteur = 0;
             for (int i = 0; i < taille; i++) {
                 if(grille[i][variable.p.y] == 0){
@@ -85,7 +101,7 @@ public class Sudoku {
             }
             variable.nbContrainte = compteur;
         }
-        v.sort(Comparator.comparing(a -> a.nbContrainte));
+        bestVariable.sort(Comparator.comparing(a -> a.nbContrainte));
     }
 
     public void LeastConstraining(Variable variable){
@@ -116,7 +132,6 @@ public class Sudoku {
                     }
                 }
             }
-
         }
     }
 
@@ -136,10 +151,12 @@ public class Sudoku {
 
     public void update(){
         v = new ArrayList<>();
+        bestVariable = new ArrayList<>();
         updateVariable();
         updateDomains();
-        MRV();
+        //MRV();
         //DegreeHeuristic();
+        chooseVariable();
     }
 
     public void updateVariable(){
