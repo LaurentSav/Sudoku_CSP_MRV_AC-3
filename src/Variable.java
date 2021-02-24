@@ -6,24 +6,24 @@ public class Variable {
 
     int number;
     Point p;
-    List<Integer> domains;
+    List<Domains> domains;
+    List<Constraint> constraints;
     int nbContrainte;
-    int heuristic;
 
     public Variable(int number, Point p){
         this.p = p;
         this.number = number;
-        domains = new ArrayList<>();
+        domains = new ArrayList<Domains>();
+        constraints = new ArrayList<Constraint>();
         nbContrainte = 0;
-        int heuristic = 0;
     }
+
 
     @Override
     public String toString() {
         return "Variable{" +
-                "number=" + number +
                 ", p=" + p +
-                ", domains=" + domains +
+                ", nbContrainte=" + nbContrainte +
                 '}';
     }
 }
