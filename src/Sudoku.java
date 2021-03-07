@@ -68,6 +68,12 @@ public class Sudoku {
                 }
             }
         }
+        for(Variable variable1 : assigned){
+            variable1.domains.add(new Domains(variable1.number));
+        }
+        //AC3
+        //AC3();
+
 
     }
 
@@ -82,6 +88,7 @@ public class Sudoku {
     * */
     public boolean checkConstraint(Variable var1, Variable var2){
         for(Constraint constraint : var1.constraints){
+
             if(constraint.v2.number == var2.number){
                 return false;
             }
@@ -101,14 +108,22 @@ public class Sudoku {
         for(Variable variable : unassigned){
             //Check Column
             for (int i = 0; i < taille; i++) {
-                if(grille[i][variable.p.y] != 0){
-                    variable.constraints.add(new Constraint(variable, checkVariable(i,variable.p.y)));
+                if(variable.p.x != i){
+                    if(grille[i][variable.p.y] != 0){
+                        variable.constraints.add(new Constraint(variable, checkVariable(i,variable.p.y)));
+                    }else {
+                        variable.constraints.add(new Constraint(variable, addUnassignedVariable(i, variable.p.y)));
+                    }
                 }
             }
             // Check Row
             for (int i = 0; i < taille; i++) {
-                if(grille[variable.p.x][i] != 0){
-                    variable.constraints.add(new Constraint(variable, checkVariable(variable.p.x,i)));
+                if(variable.p.y != i){
+                    if(grille[variable.p.x][i] != 0){
+                        variable.constraints.add(new Constraint(variable, checkVariable(variable.p.x,i)));
+                    }else {
+                        variable.constraints.add(new Constraint(variable, addUnassignedVariable(variable.p.x, i)));
+                    }
                 }
             }
             // Check Square
@@ -117,8 +132,12 @@ public class Sudoku {
 
             for (int i = row; i < 3; i++) {
                 for (int j = col; j < 3; j++){
-                    if(grille[i][j] != 0){
-                        variable.constraints.add(new Constraint(variable, checkVariable(i,j)));
+                    if(variable.p.y != j && variable.p.x != i) {
+                        if (grille[i][j] != 0) {
+                            variable.constraints.add(new Constraint(variable, checkVariable(i, j)));
+                        } else {
+                            variable.constraints.add(new Constraint(variable, addUnassignedVariable(i, j)));
+                        }
                     }
                 }
             }
@@ -128,6 +147,15 @@ public class Sudoku {
 
     public Variable checkVariable(int i, int j){
         for(Variable variable : assigned){
+            if(variable.p.x == i && variable.p.y == j){
+                return variable;
+            }
+        }
+        return null;
+    }
+
+    public Variable addUnassignedVariable(int i, int j){
+        for(Variable variable : unassigned){
             if(variable.p.x == i && variable.p.y == j){
                 return variable;
             }
@@ -148,10 +176,6 @@ public class Sudoku {
     /* Backtraking Récursion */
     public boolean backtrackingRecursion(Variable variable){
 
-        cpt++;
-        System.out.println("Récursion : " +cpt);
-        System.out.println(this);
-
         /* Si grille pleine, alors fin de la récursion et donc du backtracking */
         if(checkFull()){
             return true;
@@ -161,13 +185,15 @@ public class Sudoku {
         Variable v1 = bestVariable.remove(0);
 
         // LeastConstraining Method
+        System.out.println(v1.domains);
         LeastConstraining(v1);
-        //AC3
-        AC3();
-
+        System.out.println(v1.domains);
 
         // Pour chaque valeur du domaines de la variable sélectionné
         for(Domains i : v1.domains){
+            System.out.println("Récursion : " +cpt);
+            System.out.println(this);
+            cpt++;
             Variable v2 = v1;
             v2.number = i.valeur;
             // On regarde si la valeur i est consistante avec les différentes contraintes de la variable sélectionné
@@ -187,6 +213,7 @@ public class Sudoku {
                // les contraintes, les domaines de chaque variable non assigné
                grille[v1.p.x][v1.p.y] = 0;
                update();
+
            }
         }
         return false;
@@ -201,7 +228,9 @@ public class Sudoku {
     public void chooseVariable(){
 
         // Utilisation de MRV (triage de la liste en fonction de la taille du domaine
+        //System.out.println(unassigned);
         MRV();
+        //System.out.println(unassigned);
 
         // Vérification dans la liste des variables non assignées que le second élément a oui ou non la même taille de domaine
         // que le premier élément
@@ -216,7 +245,9 @@ public class Sudoku {
         // Degree Heuristic fera le tri de cette liste selon le nombre de contraintes sur les variables restantes
         if(unassigned.size() > 1){
             if(unassigned.get(0).domains.size() == unassigned.get(1).domains.size()){
+                //System.out.println(bestVariable);
                 DegreeHeuristic();
+                //System.out.println(bestVariable);
             }
         }
 
@@ -367,29 +398,25 @@ public class Sudoku {
                 }
             }
         }
-
-
     }
 
     public boolean removeInconsistentValue(Variable v1, Variable v2){
-
         boolean removed = false;
         List<Domains> elementstoremove = new ArrayList<Domains>();
         for (Domains x : v1.domains){
             for(Domains y : v2.domains){
-                if(x.valeur == y.valeur){
+                if(x == y){
                     elementstoremove.add(x);
                     removed = true;
                 }
             }
         }
-
         if(removed){
-
             v1.domains.removeAll(elementstoremove);
         }
         return removed;
     }
+
 
     /* Vérification si la grille du sudoku est pleine */
     public boolean checkFull(){

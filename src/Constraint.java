@@ -11,7 +11,8 @@ public class Constraint {
     @Override
     public String toString() {
         return "\nConstraint{" +
-                ", v2=" + v2.number +
+                "v1 = " + v1.number + " " + v1.p+
+                ", v2=" + v2.number + " " + v2.p+
                 '}';
     }
 }

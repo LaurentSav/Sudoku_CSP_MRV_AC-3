@@ -22,7 +22,7 @@ public class Variable {
     @Override
     public String toString() {
         return "Variable{" +
-                ", p=" + p +
+                ", taille du domaine = " + domains.size() +
                 ", nbContrainte=" + nbContrainte +
                 '}';
     }
