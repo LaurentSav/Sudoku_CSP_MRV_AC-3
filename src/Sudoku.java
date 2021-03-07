@@ -22,6 +22,8 @@ public class Sudoku {
     public Sudoku(String name){
         grille = new int[taille][taille];
         loadSudoku(name);
+        System.out.println("Sudoku Initial");
+        System.out.println(this);
         update();
         backtracking();
     }
@@ -66,11 +68,11 @@ public class Sudoku {
                 }
             }
         }
-        // AC3 n'a pas l'air de marcher!
-        AC3();
+
     }
 
-    /* Une variable contient une liste de contraintes
+    /*
+    *  Une variable contient une liste de contraintes
     *  Chaque élément de la liste est un couple de variable (Contrainte Binaire)
     *  Dans cette fonction on regarde tout simplement si le chiffre de la variable 1 est
     *  la même que la variable 2.
@@ -154,12 +156,14 @@ public class Sudoku {
         if(checkFull()){
             return true;
         }
-        System.out.println(bestVariable);
+        //System.out.println(bestVariable);
         // On selectionne la première valeur de la liste des variables non assignés
         Variable v1 = bestVariable.remove(0);
 
         // LeastConstraining Method
         LeastConstraining(v1);
+        //AC3
+        AC3();
 
 
         // Pour chaque valeur du domaines de la variable sélectionné
@@ -269,24 +273,44 @@ public class Sudoku {
         bestVariable.sort(Collections.reverseOrder(Comparator.comparing(a -> a.nbContrainte)));
     }
 
+    /*
+    * LeastConstraining()
+    * Dans cette méthode, nous avons trié la liste des valeurs possibles d'une variable (domaine) en fonction d'un score
+    * qui représente le nombre de valeurs possibles de chaque variables non assigné se trouvant dans la liste des contraintes de la variable actuelle.
+    *
+    * Pour chaque valeur du domaine de la variable actuelle, nous allons regardé pour chaque variable se trouvant dans la liste des contraintes si elle contient cette valeur
+    * si oui alors on incrémente le compteur
+    *
+    * A la fin, chaque variable va contenir une liste de domaine où chaque valeur du domaine aura un score.
+    * On tri cette liste et lorsque l'on prend le premier élément de cette liste, on trouve la valeur la moins contraignante
+    *
+    * */
     public void LeastConstraining(Variable variable){
 
+        /* Grille temporaire */
         int[][] grilletemp = grille;
 
         for(Domains valeur : variable.domains){
             int compteur = 0;
+
+            /* Assignement de la valeur à la position de la variable dans la grille */
             grilletemp[variable.p.x][variable.p.y] = valeur.valeur;
 
+            /* Pour chaque variable dans la colonne, on regarde si cette variable contient cette valeur dans ses contraintes */
             for (int i = 0; i < taille; i++) {
                 if(grilletemp[i][variable.p.y] == 0){
                     compteur += checkPossibleValue(grilletemp, compteur, valeur.valeur, i, variable.p.y);
                 }
             }
+
+            /* Pour chaque variable dans la ligne, on regarde si cette variable contient cette valeur dans ses contraintes */
             for (int j = 0; j < taille; j++) {
                 if(grilletemp[variable.p.x][j] == 0){
                     compteur += checkPossibleValue(grilletemp, compteur, valeur.valeur, variable.p.x, j);
                 }
             }
+
+            /* Pour chaque variable dans le sous carré, on regarde si cette variable contient cette valeur dans ses contraintes */
             int row = variable.p.x - variable.p.x%3;
             int col = variable.p.y - variable.p.y%3;
 
@@ -301,6 +325,7 @@ public class Sudoku {
         }
         variable.domains.sort(Collections.reverseOrder(Comparator.comparing(a -> a.nbValeurPossible)));
     }
+
 
     public int checkPossibleValue(int[][] grilletemp, int compteur, int value, int x, int y){
         for (int i = 0; i < taille; i++) {
@@ -349,22 +374,24 @@ public class Sudoku {
     public boolean removeInconsistentValue(Variable v1, Variable v2){
 
         boolean removed = false;
-        Domains elementtoremove = null;
+        List<Domains> elementstoremove = new ArrayList<Domains>();
         for (Domains x : v1.domains){
             for(Domains y : v2.domains){
                 if(x.valeur == y.valeur){
-                    elementtoremove = x;
+                    elementstoremove.add(x);
                     removed = true;
                 }
             }
         }
+
         if(removed){
-            v1.domains.remove(elementtoremove);
+
+            v1.domains.removeAll(elementstoremove);
         }
         return removed;
     }
 
-
+    /* Vérification si la grille du sudoku est pleine */
     public boolean checkFull(){
         for (int i = 0; i < taille; i++) {
             for (int j = 0; j < taille; j++) {
@@ -376,6 +403,7 @@ public class Sudoku {
         return true;
     }
 
+    /* Chargement du Sudoku */
     public void loadSudoku(String name){
         try{
             File f = new File("src/Puzzles/" + name);
